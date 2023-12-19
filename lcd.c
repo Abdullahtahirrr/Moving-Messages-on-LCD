@@ -2,9 +2,9 @@
 #include <string.h>
 
 #define LCD P2 /* Attached Lcd on Port */
-sbit rs = P3^0; /* Configure RS Pin */
-sbit rw = P3^1; /* Configure R/W pin */
-sbit e = P3^2; /* Configure Enable pin */
+sbit rs = P3^5; /* Configure RS Pin */
+sbit rw = P3^6; /* Configure R/W pin */
+sbit e = P3^7; /* Configure Enable pin */
 
 sbit C4 = P1^0;     // Connecting keypad to Port 1
 sbit C3 = P1^1;
@@ -14,6 +14,15 @@ sbit R4 = P1^4;
 sbit R1 = P1^5;
 sbit R2 = P1^6;
 sbit R3 = P1^7;
+/* Function to send a string through UART */
+void UART_SendString(const char *str) {
+    while (*str != '\0') {
+        SBUF = *str;     // Load data into the serial buffer
+        while (TI == 0); // Wait until TX buffer is empty
+        TI = 0;          // Clear transmit interrupt flag
+        str++;
+    }
+}
 
 
 /* Function to write command on Lcd */
@@ -39,6 +48,20 @@ int row_finder4();
 /* Function to move message on LCD */
 void MoveMessage(const char *pszMessage);
 
+/* Function to initialize UART */
+void UART_Init() {
+    TMOD = 0x20; // Timer 1 in mode 2, 8-bit auto-reload
+    TH1 = 0xFD;  // Baud rate = 9600 bps (for 11.0592 MHz crystal)
+    SCON = 0x50; // 8-bit UART, enable reception
+    TR1 = 1;     // Start timer
+}
+
+/* Function to send a character through UART */
+void UART_SendChar(char c) {
+    SBUF = c;
+    while (TI == 0); // Wait until TX buffer is empty
+    TI = 0;          // Clear transmit interrupt flag
+}
 
 
 int main()
@@ -58,7 +81,7 @@ int main()
         "Message 9"};
 
     LcdInit(); /* Lcd Initialize */
-
+		UART_Init(); // Initialize UART
     while (1)
     {
         key = ReadKey(); /* Read key from keypad */
@@ -98,17 +121,19 @@ void lcd_cmd(const char cCommand)
     e = 0;
 }
 
-/* Function to Display message on Lcd */
-void DisplayMessage(const char *pszMessage)
-{
-    
-    while (*pszMessage != '\0')
-    {		rs = 1;
-				rw = 0;
+/* Function to Display message on Lcd and PC */
+void DisplayMessage(const char *pszMessage) {
+    while (*pszMessage != '\0') {
+        rs = 1;
+        rw = 0;
         e = 1;
         LCD = *pszMessage;
         msdelay(1);
         e = 0;
+
+        // Send the character to PC through UART
+        UART_SendChar(*pszMessage);
+
         pszMessage++;
     }
 }
@@ -165,14 +190,17 @@ int ReadKey()
 }
 	else if(C2==0){
 	lcd_cmd(0x01);
+
 	key=row_finder2();
 }
 	else if(C3==0){
 	lcd_cmd(0x01);
-	key=row_finder3();
+
+		key=row_finder3();
 }
 	else if(C4==0){
 	lcd_cmd(0x01);
+
 	key=row_finder4();
 	}
 	return key;
@@ -186,48 +214,7 @@ void MoveMessage(const char *pszMessage)
         msdelay(30);       /* Adjust the delay as needed */
 
 }
-/* Function for serial communication initialization */
-/* Function for serial communication initialization 
-void SerialInit() {
-    // Assuming the microcontroller is operating at a specific frequency (e.g., 11.0592 MHz)
-    // Configure the serial communication parameters
 
-    // Set the baud rate to 9600 (assuming 11.0592 MHz crystal frequency)
-    // Formula: Baud rate = Crystal frequency / (12 * (256 - TH1))
-    // For 9600 baud rate: TH1 = 256 - (Crystal frequency / (12 * 32 * Baud rate))
-    // For 11.0592 MHz and 9600 baud rate:
-    TH1 = 0xFD; // Load TH1 with 0xFD (253 in decimal)
-
-    // Configure serial mode
-    // For 8-bitdata, 1 stopbit, no parity
-    TMOD |= 0x20; // Timer1 in Mode 2 (8-bitauto-reload mode)
-    SCON = 0x50; // SCON: serial mode 1, 8-bitdata, REN=1 (Enable Receiver)
-
-    // Enable serialinterrupt (if needed)
-    // ES = 1; // Uncomment this line ifusing interrupts
-
-    // Start timer
-    TR1 = 1; // Start Timer 1 for baud rate generation
-
-    // Additional configuration if needed:
-    // - Enable transmit and/or receiveinterrupt
-    // - Set UART mode (UART0, UART1, etc.) if available
-    // - Enable FIFO (if supported)
-    // - Configure pin I/O settings (TX, RX pins)
-
-    // Your hardware-specific configurations may vary
-}
-
-/* Function for serial communication
-void SerialTransmit(chardata)
-{
-    SBUF=\data; // Loaddata into serial buffer
-    while (!TI); // Wait until transmission is complete
-    TI = 0; // Clear the transmit \interrupt flag (TI) for next transmission
-    // Optionally, add delay or error handling here
-}
-
-*/
 int row_finder1() //Function for finding the row for column 1
 
 {
