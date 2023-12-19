@@ -1,0 +1,4 @@
+".\Objects\STARTUP.obj",
+".\Objects\lcd.obj" 
+TO ".\Objects\embedded_project" 
+PRINT(".\Listings\embedded_project.m51") CODE( 0X0000-0X0FFF )
