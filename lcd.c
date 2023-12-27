@@ -6,14 +6,13 @@ sbit rs = P3^5; /* Configure RS Pin */
 sbit rw = P3^6; /* Configure R/W pin */
 sbit e = P3^7; /* Configure Enable pin */
 
-sbit C4 = P1^0;     // Connecting keypad to Port 1
-sbit C3 = P1^1;
-sbit C2 = P1^2;
-sbit C1 = P1^3;
-sbit R4 = P1^4;
-sbit R1 = P1^5;
-sbit R2 = P1^6;
-sbit R3 = P1^7;
+sbit R1 = P1^0;     // Connecting keypad to Port 1
+sbit R2 = P1^1;
+sbit R3 = P1^2;
+sbit R4 = P1^3;
+sbit C1 = P1^4;
+sbit C2 = P1^5;
+sbit C3 = P1^6;
 /* Function to send a string through UART */
 void UART_SendString(const char *str) {
     while (*str != '\0') {
@@ -179,7 +178,7 @@ int ReadKey()
 
 	msdelay(30); 
 
-	C1=C2=C3=C4=1;
+	C1=C2=C3=1;
 
 	R1=R2=R3=R4=0;
 
@@ -198,11 +197,6 @@ int ReadKey()
 
 		key=row_finder3();
 }
-	else if(C4==0){
-	lcd_cmd(0x01);
-
-	key=row_finder4();
-	}
 	return key;
 }
 
@@ -221,7 +215,7 @@ int row_finder1() //Function for finding the row for column 1
 
 R1=R2=R3=R4=1;
 
-C1=C2=C3=C4=0;
+C1=C2=C3=0;
 
 
 if(R1==0)
@@ -249,7 +243,7 @@ int row_finder2() //Function for finding the row for column 2
 
 R1=R2=R3=R4=1;
 
-C1=C2=C3=C4=0;
+C1=C2=C3=0;
 
 
 if(R1==0)
@@ -276,7 +270,7 @@ int row_finder3() //Function for finding the row for column 3
 
 R1=R2=R3=R4=1;
 
-C1=C2=C3=C4=0;
+C1=C2=C3=0;
 
 
 if(R1==0)
@@ -293,33 +287,5 @@ return 9;
 if(R4==0)
 
 return 14;
-
-}
-
-
-int row_finder4() //Function for finding the row for column 4
-
-{
-
-R1=R2=R3=R4=1;
-
-C1=C2=C3=C4=0;
-
-
-if(R1==0)
-
-return 10;
-
-if(R2==0)
-
-return 11;
-
-if(R3==0)
-
-return 12;
-
-if(R4==0)
-
-return 13;
 
 }
